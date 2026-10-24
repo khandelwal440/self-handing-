@@ -1,0 +1,86 @@
+# kube-prometheus-stack for a local kind cluster.
+# Everything that detects and reports failures is pinned to the control-plane node,
+# so killing a worker can't take out the thing that is supposed to notice it.
+
+# Control-plane components aren't scrapeable in kind; disabling avoids permanent noise.
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheusOperator:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
+  tolerations: &controlPlane
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+
+kube-state-metrics:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
+  tolerations: *controlPlane
+
+prometheus:
+  service:
+    type: NodePort
+    nodePort: 30900
+  prometheusSpec:
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+    retention: 2d
+    # Pick up ServiceMonitors/PrometheusRules from every namespace, not just this release's.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    tolerations: *controlPlane
+
+alertmanager:
+  service:
+    type: NodePort
+    nodePort: 30903
+  alertmanagerSpec:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    tolerations: *controlPlane
+  config:
+    global:
+      resolve_timeout: 1m
+    route:
+      receiver: "null"
+      group_by: [alertname, namespace, deployment, pod, node]
+      group_wait: 10s
+      group_interval: 30s
+      repeat_interval: 2m
+      routes:
+        - receiver: healer
+          matchers:
+            - remediation=~".+"
+    receivers:
+      - name: "null"
+      - name: healer
+        webhook_configs:
+          - url: http://healer.healer.svc:8080/webhook
+            send_resolved: true
+    inhibit_rules: []
+
+grafana:
+  adminPassword: admin # local kind demo only
+  service:
+    type: NodePort
+    nodePort: 30300
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
+  tolerations: *controlPlane

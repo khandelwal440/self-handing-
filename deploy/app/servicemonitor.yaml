@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: shop-api
+  namespace: shop
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: shop-api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      relabelings:
+        # Alerts need to know which Deployment to act on.
+        - sourceLabels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+          targetLabel: deployment

@@ -1,0 +1,19 @@
+# Baseline chaos: Kubernetes heals this one on its own (ReplicaSet). No healer action expected,
+# which is the point: the healer only covers what the platform doesn't.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: shop-pod-kill
+  namespace: shop
+spec:
+  schedule: "*/2 * * * *"
+  type: PodChaos
+  historyLimit: 5
+  concurrencyPolicy: Forbid
+  podChaos:
+    action: pod-kill
+    mode: one
+    selector:
+      namespaces: [shop]
+      labelSelectors:
+        app.kubernetes.io/name: shop-api

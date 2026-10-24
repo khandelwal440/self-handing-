@@ -1,0 +1,6 @@
+# kind nodes run containerd, not Docker.
+chaosDaemon:
+  runtime: containerd
+  socketPath: /run/containerd/containerd.sock
+dashboard:
+  securityMode: false # local demo only: no RBAC token prompt in the Chaos Mesh UI

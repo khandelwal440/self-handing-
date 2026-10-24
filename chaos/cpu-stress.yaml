@@ -1,0 +1,18 @@
+# Burns CPU inside every current shop-api container. Latency climbs, HighLatencyP95 fires,
+# the healer scales up, and the new (unstressed) pods absorb the traffic.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: shop-cpu-burn
+  namespace: shop
+spec:
+  mode: all
+  selector:
+    namespaces: [shop]
+    labelSelectors:
+      app.kubernetes.io/name: shop-api
+  stressors:
+    cpu:
+      workers: 2
+      load: 100
+  duration: "6m"

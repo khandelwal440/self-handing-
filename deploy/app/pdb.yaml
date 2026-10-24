@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: shop-api
+  namespace: shop
+spec:
+  minAvailable: 2
+  # Pods on a dead node are already unready; let the healer evict them instead of being blocked.
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: shop-api

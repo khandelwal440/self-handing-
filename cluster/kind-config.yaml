@@ -1,0 +1,19 @@
+# Local cluster: 1 control-plane (runs the monitoring stack + healer) and 3 workers (run the app).
+# NodePorts are mapped to localhost so the demo needs no port-forwarding.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: self-healing
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080 # shop-api
+        hostPort: 8080
+      - containerPort: 30300 # Grafana
+        hostPort: 3000
+      - containerPort: 30900 # Prometheus
+        hostPort: 9090
+      - containerPort: 30903 # Alertmanager
+        hostPort: 9093
+  - role: worker
+  - role: worker
+  - role: worker

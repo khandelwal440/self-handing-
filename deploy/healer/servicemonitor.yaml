@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: healer
+  namespace: healer
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: healer
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
